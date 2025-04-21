@@ -32,4 +32,9 @@ public class Thermostat extends Device{
         return false;
     }
 
+    @Override
+    public String getInfo(){
+        return String.format("thermostat: %s %s %dC %s", name, status, temperature, protocol);
+    }
+
 }
