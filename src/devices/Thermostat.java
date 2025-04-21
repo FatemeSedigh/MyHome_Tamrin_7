@@ -1,4 +1,9 @@
 package devices;
 
-public class Thermostat {
+public class Thermostat extends Device{
+
+    private int temperature;
+
+
+
 }
