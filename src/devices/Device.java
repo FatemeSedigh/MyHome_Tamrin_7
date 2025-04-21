@@ -18,4 +18,7 @@ public abstract class Device {
 
     public void setStatus(String status){ this.status = status; }
 
+    public abstract boolean setProperty(String property, String value);
+    public abstract String getInfo();
+
 }
