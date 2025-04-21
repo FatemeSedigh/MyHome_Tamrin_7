@@ -16,4 +16,8 @@ public class Rule {
     public String getTime(){ return time; }
     public String getAction(){ return action; }
 
+    public String getInfo() {
+        return String.format("%s %s %s", deviceName, time, action);
+    }
+
 }
