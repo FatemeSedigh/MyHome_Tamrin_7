@@ -17,7 +17,20 @@ public class Light extends Device{
                 return true;
             }
             return false;
+        } else if (property.equals("brightness")){
+            try {
+                int brightness = Integer.parseInt(value);
+                if(brightness >= 0 && brightness <=100 ){
+                    this.brightness = brightness;
+                    return true;
+                }
+                return false;
+            } catch (NumberFormatException e) {
+                return false;
+            }
         }
+        return false;
     }
+
 
 }
