@@ -12,6 +12,8 @@ public class Rule {
         this.action = action;
     }
 
-
+    public String getDeviceName(){ return deviceName; }
+    public String getTime(){ return time; }
+    public String getAction(){ return action; }
 
 }
