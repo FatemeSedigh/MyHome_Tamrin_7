@@ -25,7 +25,7 @@ public class Thermostat extends Device{
                     return true;
                 }
                 return false;
-            } catch (NumberFormatException) {
+            } catch (NumberFormatException e) {
                 return false;
             }
         }
