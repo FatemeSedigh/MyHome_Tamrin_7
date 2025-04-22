@@ -1,6 +1,6 @@
 package exceptions;
 
-class DeviceException extends Exception {
+public class DeviceException extends Exception {
     public DeviceException(String message) { super(message); }
     public static DeviceException duplicateDeviceName() { return new DeviceException("duplicate device name"); }
     public static DeviceException deviceNotFound() { return new DeviceException("device not found"); }
