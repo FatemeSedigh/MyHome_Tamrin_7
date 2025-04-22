@@ -5,7 +5,7 @@ public class Light extends Device{
     private int brightness;
 
     public Light(String name, String protocol){
-        super(name, protocol);
+        super(name, protocol, "off");
         this.brightness = 50;
     }
 

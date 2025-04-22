@@ -2,12 +2,12 @@ import devices.Device;
 import devices.Light;
 import devices.Thermostat;
 import rules.Rule;
-import exceptions.*;
 
 import java.util.*;
 
 public class Main {
-    private static Map<String, Device> devices = new LinkedHashMap<>();
+    private static Map<String, Device> devices = new HashMap<>();
+    private static List<Device> deviceOrder = new ArrayList<>();
     private static List<Rule> rules = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -19,47 +19,36 @@ public class Main {
             String[] parts = line.split(" ");
             String command = parts[0];
 
-            try {
-                switch (command) {
-                    case "add_device":
-                        handleAddDevice(parts);
-                        break;
-                    case "set_device":
-                        handleSetDevice(parts);
-                        break;
-                    case "remove_device":
-                        handleRemoveDevice(parts);
-                        break;
-                    case "list_devices":
-                        handleListDevices();
-                        break;
-                    case "add_rule":
-                        handleAddRule(parts);
-                        break;
-                    case "check_rules":
-                        handleCheckRules(parts);
-                        break;
-                    case "list_rules":
-                        handleListRules();
-                        break;
-                    default:
-                        System.out.println("invalid command");
-                }
-            } catch (InvalidInputException e) {
-                System.out.println(e.getMessage());
-            } catch (DeviceException e) {
-                System.out.println(e.getMessage());
-            } catch (RuleException e) {
-                System.out.println(e.getMessage());
-            } catch (Exception e) {
-                System.out.println("invalid input");
+            switch (command) {
+                case "add_device":
+                    addDevice(parts);
+                    break;
+                case "set_device":
+                    setDevice(parts);
+                    break;
+                case "remove_device":
+                    removeDevice(parts);
+                    break;
+                case "list_devices":
+                    listDevices();
+                    break;
+                case "add_rule":
+                    addRule(parts);
+                    break;
+                case "check_rules":
+                    checkRules(parts);
+                    break;
+                case "list_rules":
+                    listRules();
+                    break;
             }
         }
     }
 
-    private static void handleAddDevice(String[] parts) throws InvalidInputException, DeviceException {
+    private static void addDevice(String[] parts) {
         if (parts.length != 4) {
-            throw InvalidInputException.forCommand("add_device");
+            System.out.println("invalid input");
+            return;
         }
 
         String type = parts[1];
@@ -67,11 +56,13 @@ public class Main {
         String protocol = parts[3];
 
         if (devices.containsKey(name)) {
-            throw DeviceException.duplicateDeviceName();
+            System.out.println("duplicate device name");
+            return;
         }
 
         if (!protocol.equals("WiFi") && !protocol.equals("Bluetooth")) {
-            throw InvalidInputException.general();
+            System.out.println("invalid input");
+            return;
         }
 
         Device device;
@@ -80,16 +71,19 @@ public class Main {
         } else if (type.equals("thermostat")) {
             device = new Thermostat(name, protocol);
         } else {
-            throw InvalidInputException.general();
+            System.out.println("invalid input");
+            return;
         }
 
         devices.put(name, device);
+        deviceOrder.add(device);
         System.out.println("device added successfully");
     }
 
-    private static void handleSetDevice(String[] parts) throws InvalidInputException, DeviceException {
+    private static void setDevice(String[] parts) {
         if (parts.length != 4) {
-            throw InvalidInputException.forCommand("set_device");
+            System.out.println("invalid input");
+            return;
         }
 
         String name = parts[1];
@@ -97,66 +91,56 @@ public class Main {
         String value = parts[3];
 
         if (!devices.containsKey(name)) {
-            throw DeviceException.deviceNotFound();
+            System.out.println("device not found");
+            return;
         }
 
         Device device = devices.get(name);
         if (!device.setProperty(property, value)) {
             if (property.equals("status") || property.equals("brightness") || property.equals("temperature")) {
-                throw DeviceException.invalidValue();
+                System.out.println("invalid value");
             } else {
-                throw DeviceException.invalidProperty();
+                System.out.println("invalid property");
             }
+        } else {
+            System.out.println("device updated successfully");
         }
-
-        System.out.println("device updated successfully");
     }
 
-    private static void handleRemoveDevice(String[] parts) throws InvalidInputException, DeviceException {
+    private static void removeDevice(String[] parts) {
         if (parts.length != 2) {
-            throw InvalidInputException.forCommand("remove_device");
+            System.out.println("invalid input");
+            return;
         }
 
         String name = parts[1];
 
         if (!devices.containsKey(name)) {
-            throw DeviceException.deviceNotFound();
+            System.out.println("device not found");
+            return;
         }
 
         devices.remove(name);
-        rules.removeIf(rule -> rule.getDeviceName().equals(name));
+        deviceOrder.removeIf(d -> d.getName().equals(name));
+        rules.removeIf(r -> r.getDeviceName().equals(name));
         System.out.println("device removed successfully");
     }
 
-    private static void handleListDevices() {
-        if (devices.isEmpty()) {
+    private static void listDevices() {
+        if (deviceOrder.isEmpty()) {
             System.out.println();
             return;
         }
 
-        for (Device device : devices.values()) {
+        for (Device device : deviceOrder) {
             System.out.println(device.getInfo());
         }
     }
 
-    private static boolean isValidTime(String time) {
-        if (time.length() != 5 || time.charAt(2) != ':') {
-            return false;
-        }
-
-        try {
-            int hour = Integer.parseInt(time.substring(0, 2));
-            int minute = Integer.parseInt(time.substring(3));
-
-            return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    private static void handleAddRule(String[] parts) throws InvalidInputException, DeviceException, RuleException {
+    private static void addRule(String[] parts) {
         if (parts.length != 4) {
-            throw InvalidInputException.forCommand("add_rule");
+            System.out.println("invalid input");
+            return;
         }
 
         String name = parts[1];
@@ -164,20 +148,24 @@ public class Main {
         String action = parts[3];
 
         if (!devices.containsKey(name)) {
-            throw DeviceException.deviceNotFound();
+            System.out.println("device not found");
+            return;
         }
 
         if (!isValidTime(time)) {
-            throw RuleException.invalidTime();
+            System.out.println("invalid time");
+            return;
         }
 
         if (!action.equals("on") && !action.equals("off")) {
-            throw RuleException.invalidAction();
+            System.out.println("invalid action");
+            return;
         }
 
         for (Rule rule : rules) {
             if (rule.getDeviceName().equals(name) && rule.getTime().equals(time)) {
-                throw RuleException.duplicateRule();
+                System.out.println("duplicate rule");
+                return;
             }
         }
 
@@ -185,15 +173,17 @@ public class Main {
         System.out.println("rule added successfully");
     }
 
-    private static void handleCheckRules(String[] parts) throws InvalidInputException, RuleException {
+    private static void checkRules(String[] parts) {
         if (parts.length != 2) {
-            throw InvalidInputException.forCommand("check_rules");
+            System.out.println("invalid input");
+            return;
         }
 
         String time = parts[1];
 
         if (!isValidTime(time)) {
-            throw RuleException.invalidTime();
+            System.out.println("invalid time");
+            return;
         }
 
         for (Rule rule : rules) {
@@ -208,7 +198,7 @@ public class Main {
         System.out.println("rules checked");
     }
 
-    private static void handleListRules() {
+    private static void listRules() {
         if (rules.isEmpty()) {
             System.out.println();
             return;
@@ -217,5 +207,17 @@ public class Main {
         for (Rule rule : rules) {
             System.out.println(rule.getInfo());
         }
+    }
+
+    private static boolean isValidTime(String time) {
+        if (!time.matches("\\d{2}:\\d{2}")) {
+            return false;
+        }
+
+        String[] parts = time.split(":");
+        int hour = Integer.parseInt(parts[0]);
+        int minute = Integer.parseInt(parts[1]);
+
+        return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
     }
 }
